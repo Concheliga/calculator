@@ -1,11 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Doc loaded')
     const input = document.querySelector('input')
+    const historyBlock = document.querySelector('.history')
     const activeButton = Array.of(...document.querySelectorAll('button')).filter(button => !button.disabled)
     const numbers = activeButton.filter(item => !Number.isNaN(Number(item.innerText)))
     const notNumberButtons = activeButton.filter(item => !numbers.includes(item))
     let operationValue = 0
     let operation = ''
+    let historyText = ''
 
     function setOperationValue(inputValue, operationType) {
         if (operationType === '+') operationValue += inputValue
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (operationType === '%') operationValue = inputValue
         else operationValue = 0
 
+        historyText += `${inputValue} ${operationType} `
         operation = operationType
         input.value = ''
     }
@@ -23,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         operationValue = inputValue
         input.value = ''
         operation = operationSign
+        historyText += `${inputValue} ${operationSign} `
     }
 
     function setResultValue(inputValue, operation) {
@@ -48,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 break
         }
 
+        if (operation === '%') historyText += ` from ${inputValue} = ${input.value}`
+        else historyText += `${inputValue} = ${input.value}`
         operation = ''
         operationValue = 0
     }
@@ -57,11 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     notNumberButtons.forEach(item => {
         const buttonValue = item.textContent
+
         item.addEventListener('click', () => {
             const inputValue = Number(input.value)
+            const historyP = document.createElement('p')
 
-            if (buttonValue === '.') input.value += buttonValue
-            if (buttonValue === 'ac') setOperationValue('', '')
+            if (buttonValue === '.') {
+                input.value += buttonValue
+                historyText += input.value
+            }
+            if (buttonValue === 'ac') {
+                setOperationValue('', '')
+                historyText = ''
+            }
             if (buttonValue === '+') setOperationValue(inputValue, buttonValue)
             if (buttonValue === '-') {
                 if (!operationValue) {
@@ -96,11 +109,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (buttonValue === '√') {
                 operationValue = inputValue
                 input.value = Math.sqrt(operationValue)
+                historyP.insertAdjacentText('beforeend', `√${inputValue} = ${input.value}`)
+                historyBlock.insertAdjacentElement('beforeend', historyP)
             }
             if (buttonValue === '+/-') {
                 inputValue <= 0?input.value = Math.abs(inputValue):input.value = `-${inputValue}`
             }
-            if (buttonValue === '=' && operation) setResultValue(inputValue, operation)
+            if (buttonValue === '=' && operation) {
+                setResultValue(inputValue, operation)
+                historyP.insertAdjacentText('beforeend', historyText)
+                historyBlock.insertAdjacentElement('beforeend', historyP)
+                historyText = ''
+            }
         })
     })
 

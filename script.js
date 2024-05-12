@@ -4,104 +4,103 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeButton = Array.of(...document.querySelectorAll('button')).filter(button => !button.disabled)
     const numbers = activeButton.filter(item => !Number.isNaN(Number(item.innerText)))
     const notNumberButtons = activeButton.filter(item => !numbers.includes(item))
-    let firstValue = 0
+    let operationValue = 0
     let operation = ''
 
+    function setOperationValue(inputValue, operationType) {
+        if (operationType === '+') operationValue += inputValue
+        else if (operationType === '-') operationValue -= inputValue
+        else if (operationType === 'x') operationValue *= inputValue
+        else if (operationType === '÷') operationValue /= inputValue
+        else if (operationType === '%') operationValue = inputValue
+        else operationValue = 0
+
+        operation = operationType
+        input.value = ''
+    }
+
+    function setFirstValue(operationSign, inputValue) {
+        operationValue = inputValue
+        input.value = ''
+        operation = operationSign
+    }
+
+    function setResultValue(inputValue, operation) {
+        switch (operation) {
+            case '+':
+                input.value = inputValue + operationValue
+                break
+            case '-':
+                input.value = operationValue - inputValue
+                break
+            case '%':
+                input.value = (inputValue / 100) * operationValue
+                break
+            case '÷':
+                if (inputValue === 0) {
+                    input.value = 'Ошибка'
+                    break
+                }
+                input.value = operationValue / inputValue
+                break
+            case 'x':
+                input.value = operationValue * inputValue
+                break
+        }
+
+        operation = ''
+        operationValue = 0
+    }
+
     numbers.forEach(item => {
-        item.addEventListener('click', ()=>input.value += item.innerText)
+        item.addEventListener('click', () => input.value += item.innerText)
     })
-    notNumberButtons.forEach(item=>{
+    notNumberButtons.forEach(item => {
         const buttonValue = item.textContent
         item.addEventListener('click', () => {
             const inputValue = Number(input.value)
 
             if (buttonValue === '.') input.value += buttonValue
-            if (buttonValue === 'ac') {
-                input.value = ''
-                firstValue = 0
-                operation = ''
-            }
-            if (buttonValue === '+') {
-                firstValue += inputValue
-                input.value = ''
-                operation = '+'
-            }
+            if (buttonValue === 'ac') setOperationValue('', '')
+            if (buttonValue === '+') setOperationValue(inputValue, buttonValue)
             if (buttonValue === '-') {
-                if (!firstValue) {
-                    firstValue = inputValue
-                    input.value = ''
-                    operation = '-'
+                if (!operationValue) {
+                    setFirstValue(buttonValue, inputValue)
                     return
                 }
-                firstValue -= inputValue
-                input.value = ''
-                operation = '-'
+
+                setOperationValue(inputValue, buttonValue)
             }
-            if (buttonValue === '%') {
-                firstValue = input.value
-                input.value = ''
-                operation = '%'
-            }
+            if (buttonValue === '%') setOperationValue(inputValue, buttonValue)
             if (buttonValue === '÷') {
-                if (!firstValue) {
-                    firstValue = inputValue
-                    input.value = ''
-                    operation = '/'
+                if (!operationValue) {
+                    setFirstValue(buttonValue, inputValue)
                     return
                 }
-                if (firstValue && inputValue === 0) {
+                if (operationValue && inputValue === 0) {
                     input.value = 'Ошибка'
                     operation = ''
                     return
                 }
-                firstValue /= inputValue
-                input.value = ''
-                operation = '/'
+
+                setOperationValue(inputValue, buttonValue)
             }
-            if (buttonValue === '÷') {
-                if (!firstValue) {
-                    firstValue = inputValue
-                    input.value = ''
-                    operation = 'x'
+            if (buttonValue === 'x') {
+                if (!operationValue) {
+                    setFirstValue(buttonValue, inputValue)
                     return
                 }
-                firstValue *= inputValue
-                input.value = ''
-                operation = 'x'
+
+                setOperationValue(inputValue, buttonValue)
             }
             if (buttonValue === '√') {
-                firstValue = inputValue
-                input.value = Math.sqrt(firstValue)
+                operationValue = inputValue
+                input.value = Math.sqrt(operationValue)
             }
             if (buttonValue === '+/-') {
-                if (inputValue < 0) input.value = Math.abs(inputValue)
-                if (inputValue > 0) input.value = `-${inputValue}`
+                inputValue <= 0?input.value = Math.abs(inputValue):input.value = `-${inputValue}`
             }
-            if (buttonValue === '=') {
-                switch(operation) {
-                    case '+':
-                        input.value = inputValue + firstValue
-                        break
-                    case '-':
-                        input.value = firstValue - inputValue
-                        break
-                    case '%':
-                        input.value = (inputValue / 100) * firstValue
-                        break
-                    case '/':
-                        if (inputValue === 0) {
-                            input.value = 'Ошибка'
-                            break
-                        }
-                        input.value = firstValue / inputValue
-                        break
-                    case 'x':
-                        input.value = firstValue * inputValue
-                        break
-                }
-                operation = ''
-                firstValue = 0
-            }
+            if (buttonValue === '=' && operation) setResultValue(inputValue, operation)
         })
     })
 

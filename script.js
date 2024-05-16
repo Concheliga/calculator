@@ -9,13 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let historyText = ''
 
     function setOperationValue(inputValue, operationType) {
-        if (operationType === '+') operationValue += inputValue
-        else if (operationType === '-') operationValue -= inputValue
-        else if (operationType === 'x') operationValue *= inputValue
-        else if (operationType === '÷') operationValue /= inputValue
-        else if (operationType === '%') operationValue = inputValue
+        if (!operation) operation = operationType
+        if (operation === '+') operationValue += inputValue
+        else if (operation === '-') operationValue -= inputValue
+        else if (operation === 'x') operationValue *= inputValue
+        else if (operation === '÷') operationValue /= inputValue
+        else if (operation === '%') operationValue = inputValue
         else operationValue = 0
-
+        
         historyText += `${inputValue} ${operationType} `
         operation = operationType
         input.value = ''
@@ -28,8 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
         historyText += `${inputValue} ${operationSign} `
     }
 
-    function setResultValue(inputValue, operation) {
-        switch (operation) {
+    function setResultValue(inputValue, operationType) {
+        switch (operationType) {
             case '+':
                 input.value = inputValue + operationValue
                 break
@@ -51,14 +52,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 break
         }
 
-        if (operation === '%') historyText += ` from ${inputValue} = ${input.value}`
+        if (operationType === '%') historyText += ` from ${inputValue} = ${input.value}`
         else historyText += `${inputValue} = ${input.value}`
+        operationType = ''
         operation = ''
         operationValue = 0
     }
 
     numbers.forEach(item => {
-        item.addEventListener('click', () => input.value += item.innerText)
+        item.addEventListener('click', () => {
+            if (input.value != 'Ошибка') input.value += item.innerText
+            else input.value = item.innerText
+        })
     })
     notNumberButtons.forEach(item => {
         const buttonValue = item.textContent
@@ -68,8 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyP = document.createElement('p')
 
             if (buttonValue === '.') {
-                input.value += buttonValue
-                historyText += input.value
+                if (input.value.length === 0) {
+                    input.value += buttonValue
+                }
+                else if (!(input.value.includes('.'))){
+                    input.value += buttonValue
+                } else {
+                    input.value = 'Ошибка'
+                    historyText = historyText.slice(0, historyText.length - 2)
+                }
+                
             }
             if (buttonValue === 'ac') {
                 setOperationValue('', '')
@@ -107,8 +120,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 setOperationValue(inputValue, buttonValue)
             }
             if (buttonValue === '√') {
-                operationValue = inputValue
-                input.value = Math.sqrt(operationValue)
+                if (input.value >= 0) {
+                    operationValue = inputValue
+                    input.value = Math.sqrt(operationValue)
+                }
+                else {
+                    input.value = 'Ошибка'
+                    operationValue = ''
+                }
+
                 historyP.insertAdjacentText('beforeend', `√${inputValue} = ${input.value}`)
                 historyBlock.insertAdjacentElement('beforeend', historyP)
             }
